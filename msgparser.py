@@ -3,7 +3,7 @@ import re
 START = "$START$"
 END = "$END$"
 LINEEND = "$$$"
-attrs = ['name','isDead','growth','pos','type']
+attrs = ['name','isDead','growth','pos','type','port']
 class MsgParser(object):
     def __init__(self):
         pass
@@ -43,7 +43,8 @@ class MsgParser(object):
         for i in infos:
             print "********the %dst message start**********"%index
             for a in attrs:
-                print "%s:%s"%(a,i[a])
+                if i.has_key(a):
+                    print "%s:%s"%(a,i[a])
             print "********the %dst message end************"%index
             print 
             print
