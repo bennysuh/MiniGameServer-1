@@ -7,6 +7,7 @@ class Pawn(object):
     def __init__(self, recvSock, clientAddr, clientRecvPort):
         self.recvSock = recvSock
         self.clientAddr = clientAddr
+        self.clientRecvport = clientRecvPort
         self.sendSock = self.connectToClient( clientAddr[0],clientRecvPort)
         self.msgQueue = Queue.Queue()
         
@@ -17,8 +18,8 @@ class Pawn(object):
             sock.connect((ip, port))
             print "conneted to client scuuess"
             return sock
-        except Exception:
-            print "connect to client %s error: %s"%(self.clientAddr ,str(Exception))
+        except Exception,e:
+            print "connect to client %s:%s error:"%(self.clientAddr[0], str(self.clientRecvport)),e
             return None
     
     def AsycFromClient(self):
