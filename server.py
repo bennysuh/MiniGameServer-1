@@ -7,6 +7,7 @@ from pawn import *
 import time
 import Queue
 import threading
+import sys
 """
 msg format:
 
@@ -48,9 +49,12 @@ msgParser = MsgParser()
 # msgParser.printMsg(msg1)
 # print msgParser.parseToDict(msg1)
 
-port = 10010
+port = 10013
+if len(sys.argv) > 1:
+    port = int(sys.argv[1])
 BUF_SIZE = 2048  
 AD = ("0.0.0.0", port)
+print "listen at ",AD
 AD1 = ("0.0.0.0", port+1)
 so = socket(AF_INET,SOCK_STREAM)
 so.bind(AD)
