@@ -3,6 +3,7 @@ import re
 START = "$START$"
 END = "$END$"
 LINEEND = "$$$"
+APP_QUIT="APP_QUIT"
 attrs = ['name','isDead','growth','pos','type','port']
 class MsgParser(object):
     def __init__(self):

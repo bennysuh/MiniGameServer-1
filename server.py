@@ -66,19 +66,25 @@ def BrodCasting():
     print "broadCast Thread start"
     global pawnDic, pawnList, pawnQueue, flagQueue, mutex
     while True and flagBrodcastQueue.qsize() > 0:
-        if(mutex.acquire()):
+        if True:
             
             tmpStr = ''
             if msgQueue.qsize() > 0:
                 print "brodcast at ",time.ctime()
+                print "msgQueue qsize :",msgQueue.qsize()
                 for i in range(msgQueue.qsize()):
-                    tmpStr += msgQueue.get()
+                    s = msgQueue.get()
+                    if s=='' or s.find("$") < 0 :
+                        continue
+                    print i,"st str :",repr(s)
+                    tmpStr += s
             if len(tmpStr) > 0:
+                print "BroadCasting thread, sending"
+                mutex.acquire()
                 for p in pawnList:
                     p.send(tmpStr)
+                mutex.release()
             
-            mutex.release()
-            pass
         time.sleep(0.1)
     print "broadCast Thread end"
 broadCastThread = threading.Thread(target=BrodCasting, args = ())

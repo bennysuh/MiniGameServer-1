@@ -4,6 +4,7 @@ import re
 import Queue
 from msgparser import *
 import time
+import select
 
 BUF_SIZE = 2048
 class Pawn(object):
@@ -58,9 +59,34 @@ class Pawn(object):
     def KeepRecvFromClient(self):
         print "RecvThread start"
         while True and self.recvFlagQueue.qsize() > 0:
-            data = self.recvSock.recv(BUF_SIZE)
-            self.msgParser.parseMsg(data)
-            self.msgQueue.put(data)
+            try:
+                ready_to_read, ready_to_write, in_error = \
+            select.select([self.recvSock,],[self.recvSock,], [], 0.2)
+            except select.error:
+                self.recvSock.shutdown(1)
+                self.recvSock.close()
+                break
+            if len(ready_to_read) > 0: 
+                data = self.recvSock.recv(BUF_SIZE)
+                print "recv a msg, put to msgqueue...",data
+                if data.find(APP_QUIT) > 0:
+                    print "client app quit"
+                    self.StopRecvThread()
+                    self.StopSendThread()
+                    self.recvSock.shutdown(1)
+                    self.recvSock.close()
+                    self.sendSock.shutdown(1)
+                    self.sendSock.close()
+                    break
+                
+                    
+                if data.find(START) > 0:
+                    
+                    self.msgParser.parseMsg(data)
+                    self.msgQueue.put(data)
+                
+            
+            
             time.sleep(0.05)
         print "RecvThread end"
             
@@ -71,7 +97,15 @@ class Pawn(object):
         print "SendThread start"
         while True and self.sendFlagQueue.qsize() > 0:
             if self.sendMsgQueue.qsize() > 0:
-                self.sendSock.sendall(self.sendMsgQueue.get())
+                try:
+                    ready_to_read, ready_to_write, in_error = \
+            select.select([self.sendSock,],[self.sendSock,], [], 0.2)
+                except select.error:
+                    self.sendSock.shutdown(1)
+                    self.sendSock.close()
+                    break
+                if len(ready_to_write) > 0:
+                    self.sendSock.send(self.sendMsgQueue.get())
             time.sleep(0.05)
         print "SendThread end"
             
