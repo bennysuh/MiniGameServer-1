@@ -5,7 +5,8 @@ import re
 from msgparser import *
 from pawn import *
 import time
-
+import Queue
+import threading
 """
 msg format:
 
@@ -35,8 +36,13 @@ $END$
 
 """
 
+mutex = threading.Lock()
+pawnDic = {}
+pawnList = []
+pawnQueue = Queue.Queue()
 
-        
+
+      
             
 msgParser = MsgParser()      
 # msgParser.printMsg(msg1)
@@ -53,9 +59,31 @@ clientRecvSock = socket(AF_INET,SOCK_STREAM)
 clientRecvSock.bind( AD1 )
 clientRecvSock.listen(1000)
 
+flagBrodcastQueue = Queue.Queue()
+flagBrodcastQueue.put(True)
+msgQueue = Queue.Queue()
+def BrodCasting():
+    print "broadCast Thread start"
+    global pawnDic, pawnList, pawnQueue, flagQueue, mutex
+    while True and flagBrodcastQueue.qsize() > 0:
+        if(mutex.acquire()):
+            
+            tmpStr = ''
+            if msgQueue.qsize() > 0:
+                print "brodcast at ",time.ctime()
+                for i in range(msgQueue.qsize()):
+                    tmpStr += msgQueue.get()
+            if len(tmpStr) > 0:
+                for p in pawnList:
+                    p.send(tmpStr)
+            
+            mutex.release()
+            pass
+        time.sleep(0.1)
+    print "broadCast Thread end"
+broadCastThread = threading.Thread(target=BrodCasting, args = ())
+broadCastThread.start()          
 
-pawnDic = {}
-pawnList = []
 while True:
     print "waiting for connection..."
     client, addr = so.accept() 
@@ -72,9 +100,12 @@ while True:
             client.sendall("%sSUCCESS%s"%(START,END))
             sock1, addr1 = clientRecvSock.accept()
             sock1.sendall("%sSUCCESS%s"%(START,END))
-            pawn = Pawn(client, sock1)
+            pawn = Pawn(client, sock1, msgQueue)
+            pawn.StartRecvThread()
+            pawn.StartSendThread()
             pawnDic[ tmpDic['name'] ] = pawn
             pawnList.append(pawn)
+            pawnQueue.put(pawn)
             pass
         #"""存在此名字  服务器已经存在同名角色，返回错误"""
         else:
