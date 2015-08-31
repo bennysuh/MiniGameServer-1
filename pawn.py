@@ -17,13 +17,6 @@ class Pawn(object):
         self.msgParser = MsgParser()
         self.sendMsgQueue = Queue.Queue()
     
-    def AsycFromClient(self):
-        
-        pass
-    
-    def AsycToClient(self):
-        pass
-    
     def StartRecvThread(self):
         print "Operation: StartRecvThread"
         self.StopRecvThread()
