@@ -42,12 +42,17 @@ msgParser = MsgParser()
 # msgParser.printMsg(msg1)
 # print msgParser.parseToDict(msg1)
 
-port = 10086
+port = 10010
 BUF_SIZE = 2048  
 AD = ("0.0.0.0", port)
+AD1 = ("0.0.0.0", port+1)
 so = socket(AF_INET,SOCK_STREAM)
 so.bind(AD)
 so.listen(1000)
+clientRecvSock = socket(AF_INET,SOCK_STREAM)
+clientRecvSock.bind( AD1 )
+clientRecvSock.listen(1000)
+
 
 pawnDic = {}
 pawnList = []
@@ -65,8 +70,9 @@ while True:
         if not pawnDic.has_key(tmpDic['name']):
             print "%sSUCCESS%s"%(START,END)
             client.sendall("%sSUCCESS%s"%(START,END))
-            time.sleep(0.2)
-            pawn = Pawn(client, addr, int(tmpDic['port']))
+            sock1, addr1 = clientRecvSock.accept()
+            sock1.sendall("%sSUCCESS%s"%(START,END))
+            pawn = Pawn(client, sock1)
             pawnDic[ tmpDic['name'] ] = pawn
             pawnList.append(pawn)
             pass
