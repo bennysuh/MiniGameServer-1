@@ -65,8 +65,9 @@ class Pawn(object):
                 break
             if len(ready_to_read) > 0: 
                 data = self.recvSock.recv(BUF_SIZE)
-                print "recv a msg, put to msgqueue...",data
+                
                 if data.find(APP_QUIT) > 0:
+                    print "recv a msg, data: ",repr(data)
                     print "client app quit"
                     self.StopRecvThread()
                     self.StopSendThread()
@@ -78,12 +79,15 @@ class Pawn(object):
                     msgDic = {}
                     msgDic['name'] = self.name
                     msgDic['isDead'] = 'true'
-                    self.msgQueue.put(self.msgParser.ConstructMsg(msgDic))
+                    s = self.msgParser.ConstructMsg(msgDic)
+                    print "put msg to msgQueue, msg:",s
+                    self.msgQueue.put(s)
                     break
                 
                     
                 if data.find(START) > 0:
-                    
+                    print "recv a msg, data: ",repr(data)
+                    print "put msg to msgQueue, msg",data
                     self.msgParser.parseMsg(data)
                     self.msgQueue.put(data)
                 
