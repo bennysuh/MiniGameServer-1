@@ -1,10 +1,22 @@
 import re
-
+import time
+import threading
 START = "$START$"
 END = "$END$"
 LINEEND = "$$$"
 APP_QUIT="APP_QUIT"
 attrs = ['name','isDead','growth','pos','type','port','vec','state']
+mutexf = threading.Lock()
+def myPrint(s, *args):
+    global mutexf
+    mutexf.acquire()
+    f = open('python_log.log','w+')
+    f.write(str(s)+str(args)+'\n')
+    f.flush()
+    f.close()
+    mutexf.release()
+    
+    
 class MsgParser(object):
     def __init__(self):
         pass
@@ -43,10 +55,13 @@ class MsgParser(object):
         index = 1
         for i in infos:
             print "********the %dst message start**********"%index
+            myPrint("********the %dst message start**********"%index)
             for a in attrs:
                 if i.has_key(a):
                     print "%s:%s"%(a,i[a])
+                    myPrint("%s:%s"%(a,i[a]))
             print "********the %dst message end************"%index
+            myPrint("********the %dst message end************"%index)
             print 
             print
             index += 1
@@ -55,9 +70,12 @@ class MsgParser(object):
         index = 1
         for i in dictMsg:
             print "********the %dst message start**********"%index
+            myPrint("********the %dst message start**********"%index)
             for a in attrs:
                 print "%s:%s"%(a,i[a])
+                myPrint("%s:%s"%(a,i[a]))
             print "********the %dst message end************"%index
+            myPrint("********the %dst message end************"%index)
             print 
             print
             index += 1
