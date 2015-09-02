@@ -16,18 +16,22 @@ class Pawn(object):
         self.sendFlagQueue = Queue.Queue()
         self.msgParser = MsgParser()
         self.sendMsgQueue = Queue.Queue()
+        self.name = ''
+        self.alive = True
+    def SetName(self, n):
+        self.name = n
     
     def StartRecvThread(self):
         print "Operation: StartRecvThread"
         self.StopRecvThread()
-        self.recvFlagQueue.put(True)
+        self.recvFlagQueue = Queue.Queue()
         t = threading.Thread(target = self.KeepRecvFromClient, args = ())
         t.start()
         
     def StopRecvThread(self):
         print "Operation: StopRecvThread"
-        if self.recvFlagQueue.qsize()>0:
-            self.recvFlagQueue.get()
+        if self.recvFlagQueue.empty():
+            self.recvFlagQueue.put(True)
             print "Stop successfully...."
         else:
             print "Thread was already stopped....."
@@ -35,14 +39,14 @@ class Pawn(object):
     def StartSendThread(self):
         print "Operation: StartSendThread"
         self.StopSendThread()
-        self.sendFlagQueue.put(True)
+        self.sendFlagQueue = Queue.Queue()
         t = threading.Thread(target = self.KeepSendToClient, args = ())
         t.start()
         
     def StopSendThread(self):
         print "Operation: StopSendThread"
-        if self.sendFlagQueue.qsize()>0:
-            self.sendFlagQueue.get()
+        if self.sendFlagQueue.empty():
+            self.sendFlagQueue.put(True)
             print "Stop successfully...."
         else:
             print "Thread was already stopped....."
@@ -51,7 +55,7 @@ class Pawn(object):
         
     def KeepRecvFromClient(self):
         print "RecvThread start"
-        while True and self.recvFlagQueue.qsize() > 0:
+        while True and self.recvFlagQueue.empty():
             try:
                 ready_to_read, ready_to_write, in_error = \
             select.select([self.recvSock,],[self.recvSock,], [], 0.2)
@@ -70,6 +74,11 @@ class Pawn(object):
                     self.recvSock.close()
                     self.sendSock.shutdown(1)
                     self.sendSock.close()
+                    self.SetAlive(False)
+                    msgDic = {}
+                    msgDic['name'] = self.name
+                    msgDic['isDead'] = 'true'
+                    self.msgQueue.put(self.msgParser.ConstructMsg(msgDic))
                     break
                 
                     
@@ -88,7 +97,7 @@ class Pawn(object):
         
     def KeepSendToClient(self):
         print "SendThread start"
-        while True and self.sendFlagQueue.qsize() > 0:
+        while True and self.sendFlagQueue.empty():
             if self.sendMsgQueue.qsize() > 0:
                 try:
                     ready_to_read, ready_to_write, in_error = \
@@ -101,6 +110,14 @@ class Pawn(object):
                     self.sendSock.send(self.sendMsgQueue.get())
             time.sleep(0.05)
         print "SendThread end"
+        
+    def IsAlive(self):
+        return self.alive
+    
+    def SetAlive(self, f):
+        self.alive = f    
+        
+    
             
         
         

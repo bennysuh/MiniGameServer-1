@@ -4,7 +4,7 @@ START = "$START$"
 END = "$END$"
 LINEEND = "$$$"
 APP_QUIT="APP_QUIT"
-attrs = ['name','isDead','growth','pos','type','port']
+attrs = ['name','isDead','growth','pos','type','port','vec','state']
 class MsgParser(object):
     def __init__(self):
         pass
@@ -64,3 +64,12 @@ class MsgParser(object):
         
     def parseToDict(self,msg):
         return self.parseInfo(self.parseMsg(msg))
+    
+    
+    def ConstructMsg(self, adics):
+        msg = START
+        for a in attrs:
+            if adics.has_key(a):
+                msg += a + ':' + adics[a] + LINEEND
+        msg += END
+        return msg

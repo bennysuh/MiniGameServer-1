@@ -26,6 +26,8 @@ $isDead:true$$$
 $growth:100$$$
 $pos:100,200$$$
 $type:water$$$
+$vec:20,20$$$
+$state:normal$$$
 $END$
 $START$
 $name:PAWN_NAME2$$$
@@ -33,14 +35,16 @@ $isDead:false$$$
 $growth:100$$$
 $pos:120,200$$$
 $type:wood$$$
+$vec:20,20$$$
+$state:gear$$$
 $END$
 
 """
 
 mutex = threading.Lock()
 pawnDic = {}
-pawnList = []
-pawnQueue = Queue.Queue()
+#pawnList = []
+#pawnQueue = Queue.Queue()
 
 
       
@@ -49,7 +53,7 @@ msgParser = MsgParser()
 # msgParser.printMsg(msg1)
 # print msgParser.parseToDict(msg1)
 
-port = 10013
+port = 10010
 if len(sys.argv) > 1:
     port = int(sys.argv[1])
 BUF_SIZE = 2048  
@@ -64,12 +68,11 @@ clientRecvSock.bind( AD1 )
 clientRecvSock.listen(1000)
 
 flagBrodcastQueue = Queue.Queue()
-flagBrodcastQueue.put(True)
 msgQueue = Queue.Queue()
 def BrodCasting():
     print "broadCast Thread start"
     global pawnDic, pawnList, pawnQueue, flagQueue, mutex
-    while True and flagBrodcastQueue.qsize() > 0:
+    while True and flagBrodcastQueue.empty():
         if True:
             
             tmpStr = ''
@@ -82,15 +85,28 @@ def BrodCasting():
                         continue
                     print i,"st str :",repr(s)
                     tmpStr += s
+            mutex.acquire()
+            for k in pawnDic.keys():
+                if pawnDic[k].IsAlive() == False:
+                    pawnDic.pop(k)
+                    print '%s is dead, remove from pawnDic'%k
+                    print "current user names :", pawnDic.keys()
+            mutex.release()
             if len(tmpStr) > 0:
                 print "BroadCasting thread, sending"
                 mutex.acquire()
-                for p in pawnList:
-                    p.send(tmpStr)
+                for k in pawnDic.keys():
+                    tmpPawn = pawnDic[k]
+                    if tmpPawn.IsAlive():
+                        print "send msg to user: ",k
+                        pawnDic[k].send(tmpStr)
                 mutex.release()
+                print "BroadCasting thread, sended"
             
         time.sleep(0.1)
     print "broadCast Thread end"
+    
+    
 broadCastThread = threading.Thread(target=BrodCasting, args = ())
 broadCastThread.start()          
 
@@ -102,20 +118,21 @@ while True:
     print msgParser.printMsg(data)
     tmpDic = msgParser.parseToDict(data)
     tmpDic = tmpDic[0]
-    if tmpDic.has_key('name') and tmpDic.has_key('port'):
+    if tmpDic.has_key('name'):
         
         #"""不存在此名字  视为服务器创建角色成功"""
         if not pawnDic.has_key(tmpDic['name']):
             print "%sSUCCESS%s"%(START,END)
             client.sendall("%sSUCCESS%s"%(START,END))
             sock1, addr1 = clientRecvSock.accept()
-            sock1.sendall("%sSUCCESS%s"%(START,END))
+            sock1.sendall("%sSUCCESS RECV%s"%(START,END))
             pawn = Pawn(client, sock1, msgQueue)
+            pawn.SetName( tmpDic['name'] )
             pawn.StartRecvThread()
             pawn.StartSendThread()
             pawnDic[ tmpDic['name'] ] = pawn
-            pawnList.append(pawn)
-            pawnQueue.put(pawn)
+            #pawnList.append(pawn)
+            #pawnQueue.put(pawn)
             pass
         #"""存在此名字  服务器已经存在同名角色，返回错误"""
         else:
