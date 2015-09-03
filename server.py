@@ -53,7 +53,7 @@ msgParser = MsgParser()
 # msgParser.printMsg(msg1)
 # print msgParser.parseToDict(msg1)
 
-port = 10010
+port = 10013
 if len(sys.argv) > 1:
     port = int(sys.argv[1])
 BUF_SIZE = 2048  
@@ -138,9 +138,9 @@ while True:
             print "%sSUCCESS%s"%(START,END)
             myPrint("%sSUCCESS%s"%(START,END))
             client.sendall("%sSUCCESS%s"%(START,END))
-            sock1, addr1 = clientRecvSock.accept()
-            sock1.sendall("%sSUCCESS RECV%s"%(START,END))
-            pawn = Pawn(client, sock1, msgQueue)
+            #sock1, addr1 = clientRecvSock.accept()
+            #sock1.sendall("%sSUCCESS RECV%s"%(START,END))
+            pawn = Pawn(client, msgQueue)
             pawn.SetName( tmpDic['name'] )
             pawn.StartRecvThread()
             pawn.StartSendThread()

@@ -8,9 +8,9 @@ import select
 
 BUF_SIZE = 2048
 class Pawn(object):
-    def __init__(self, recvSock, sendSock, msgQueue):
-        self.recvSock = recvSock
-        self.sendSock = sendSock
+    def __init__(self, sock, msgQueue):
+        self.sock = sock
+        #self.sendSock = sendSock
         self.msgQueue = msgQueue
         self.recvFlagQueue = Queue.Queue()
         self.sendFlagQueue = Queue.Queue()
@@ -67,13 +67,13 @@ class Pawn(object):
         while True and self.recvFlagQueue.empty():
             try:
                 ready_to_read, ready_to_write, in_error = \
-            select.select([self.recvSock,],[self.recvSock,], [], 0.2)
+            select.select([self.sock,],[self.sock,], [], 0.2)
             except select.error:
-                self.recvSock.shutdown(1)
-                self.recvSock.close()
+                self.sock.shutdown(1)
+                self.sock.close()
                 break
             if len(ready_to_read) > 0: 
-                data = self.recvSock.recv(BUF_SIZE)
+                data = self.sock.recv(BUF_SIZE)
                 
                 if data.find(APP_QUIT) > 0:
                     print "recv a msg, data: ",repr(data)
@@ -82,10 +82,10 @@ class Pawn(object):
                     myPrint( "client app quit")
                     self.StopRecvThread()
                     self.StopSendThread()
-                    self.recvSock.shutdown(1)
-                    self.recvSock.close()
-                    self.sendSock.shutdown(1)
-                    self.sendSock.close()
+                    self.sock.shutdown(1)
+                    self.sock.close()
+                    self.sock.shutdown(1)
+                    self.sock.close()
                     self.SetAlive(False)
                     msgDic = {}
                     msgDic['name'] = self.name
@@ -121,13 +121,13 @@ class Pawn(object):
             if self.sendMsgQueue.qsize() > 0:
                 try:
                     ready_to_read, ready_to_write, in_error = \
-            select.select([self.sendSock,],[self.sendSock,], [], 0.2)
+            select.select([self.sock,],[self.sock,], [], 0.2)
                 except select.error:
-                    self.sendSock.shutdown(1)
-                    self.sendSock.close()
+                    self.sock.shutdown(1)
+                    self.sock.close()
                     break
                 if len(ready_to_write) > 0:
-                    self.sendSock.send(self.sendMsgQueue.get())
+                    self.sock.send(self.sendMsgQueue.get())
             time.sleep(0.05)
         print "SendThread end"
         myPrint("SendThread end" )
